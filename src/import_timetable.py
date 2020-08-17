@@ -1,5 +1,6 @@
 import csv
 import datetime
+import sys
 from notion.client import NotionClient
 
 def read_timetable(f):
@@ -36,9 +37,8 @@ token = sys.argv[1]
 collection_id = sys.argv[2]
 fn = sys.argv[3]
 
-timetable = read_timetable(open(fn))
-
 collection = get_collection(notion_connect(token), collection_id)
 
-doc = prepare_doc(timetable[0])
-publish_row(doc, collection)
+for row in read_timetable(open(fn)):
+    doc = prepare_doc(row)
+    publish_row(doc, collection)

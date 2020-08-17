@@ -26,6 +26,7 @@ date,duration,time,name
 #+BEGIN_SRC python :tangle src/import_timetable.py
 import csv
 import datetime
+import sys
 from notion.client import NotionClient
 #+END_SRC
 
@@ -100,14 +101,11 @@ fn = sys.argv[3]
 #+END_SRC
 
 #+BEGIN_SRC python :tangle src/import_timetable.py
-timetable = read_timetable(open(fn))
-#+END_SRC
-
-#+BEGIN_SRC python :tangle src/import_timetable.py
 collection = get_collection(notion_connect(token), collection_id)
 #+END_SRC
 
 #+BEGIN_SRC python :tangle src/import_timetable.py
-doc = prepare_doc(timetable[0])
-publish_row(doc, collection)
+for row in read_timetable(open(fn)):
+    doc = prepare_doc(row)
+    publish_row(doc, collection)
 #+END_SRC
