@@ -1,0 +1,104 @@
+#+TITLE: Notion import timetable
+#+PROPERTY: header-args:sh :session *shell notion-import-timetable sh* :results silent raw
+#+PROPERTY: header-args:python :session *shell notion-import-timetable python* :results silent raw
+#+OPTIONS: ^:nil
+
+** System environment
+
+- Python 3.7.4
+
+Python modules:
+
+- notion==0.0.25
+
+** Timetable example
+
+#+BEGIN_SRC csv :tangle data/exampleTimetable.csv
+date,duration,time,name
+2020-08-15,30,11:30,Example Work 1
+2020-08-15,30,13:30,Example Work 2
+2020-08-16,30,12:30,Example Work 3
+2020-08-16,30,16:30,Example Work 4
+#+END_SRC
+
+** Imports
+
+#+BEGIN_SRC python
+import csv
+import datetime
+from notion.client import NotionClient
+#+END_SRC
+
+** Read timetable
+
+#+BEGIN_SRC python
+def read_timetable(f):
+    res = []
+    reader = csv.DictReader(f)
+    for row in reader: res.append(row)
+    return res
+#+END_SRC
+
+** Convert property
+
+#+BEGIN_SRC python
+def convert_property(name, value):
+    if name == "date": return
+#+END_SRC
+
+** Prepare row
+
+#+BEGIN_SRC python
+def prepare_doc(row):
+    doc = dict()
+    doc["Name"] = row["name"]
+    doc["Duration"] = int(row["duration"])
+    d = "%s %s" % (row["date"], row["time"])
+    doc["Finished at"] = datetime.datetime.strptime(d, "%Y-%m-%d %H:%M")
+    doc["Status"] = "Done"
+    return doc
+#+END_SRC
+
+** Publish row
+
+#+BEGIN_SRC python
+def publish_row(doc, collection):
+    row = collection.add_row()
+    row.icon = b'\xe2\x9c\x85'.decode("utf8")
+    for k, v in doc.items():
+        row.set_property(k, v)
+#+END_SRC
+
+** Notion connect
+
+#+BEGIN_SRC python
+def notion_connect(token):
+    return NotionClient(token_v2=token)
+#+END_SRC
+
+** Get Collection
+
+#+BEGIN_SRC python
+def get_collection(client, collection_id):
+    return client.get_collection(collection_id)
+#+END_SRC
+
+** Test
+
+#+BEGIN_SRC python
+timetable = read_timetable(open("data/exampleTimetable.csv"))
+#+END_SRC
+
+#+BEGIN_SRC python
+token = "<token>"
+collection_id = "<collection_id>"
+#+END_SRC
+
+#+BEGIN_SRC python
+collection = get_collection(notion_connect(token), collection_id)
+#+END_SRC
+
+#+BEGIN_SRC python
+doc = prepare_doc(timetable[0])
+publish_row(doc, collection)
+#+END_SRC
